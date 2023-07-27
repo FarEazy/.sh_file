@@ -61,10 +61,12 @@ install_epel() {
     fi
 }
 
-# Function to create a 4GB swap file
+# Function to create a optional size  swap file
 create_swap_file() {
+    echo "input size swapfile in gb (numbers only!!!)"
+    read size
     local swap_file="/swapfile"
-    local swap_size="4G"
+    local swap_size="$size"GB
 
     # Check if a swap file already exists
     if [ -f "$swap_file" ]; then
@@ -72,7 +74,7 @@ create_swap_file() {
         exit 1
     fi
 
-    echo "Creating a 4GB swap file..."
+    echo "Creating a swap file..."
     if fallocate -l "$swap_size" "$swap_file" && chmod 600 "$swap_file"; then
         mkswap "$swap_file"
         swapon "$swap_file"
@@ -83,7 +85,7 @@ create_swap_file() {
     fi
 }
 
-# Function to isntall htop the system using dnf
+# Function to install htop the system using dnf
 install_htop() {
     echo "Sabarjap install htop tak lama pon"
     if dnf install htop -y; then
@@ -101,6 +103,25 @@ install_fail2ban() {
         echo "Fail2Ban installation successful."
     else
         echo "Failed to install Fail2Ban."
+        exit 1
+    fi
+}
+
+# Function to start and enable Fail2Ban
+start_enable_fail2ban() {
+    echo "Starting Fail2Ban..."
+    if systemctl start fail2ban; then
+        echo "Fail2Ban started successfully."
+    else
+        echo "Failed to start Fail2Ban."
+        exit 1
+    fi
+
+    echo "Enabling Fail2Ban to start on boot..."
+    if systemctl enable fail2ban; then
+        echo "Fail2Ban enabled on boot."
+    else
+        echo "Failed to enable Fail2Ban on boot."
         exit 1
     fi
 }
@@ -130,5 +151,6 @@ install_epel
 create_swap_file
 install_htop
 install_fail2ban
+start_enable_fail2ban
 configure_fail2ban
 exit 0
